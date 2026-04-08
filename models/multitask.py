@@ -58,13 +58,13 @@ class MultiTaskPerceptionModel(nn.Module):
         unet_path: str = "checkpoints/unet.pth",
     ):
         import gdown
-        gdown.download(id="1lN2CT1Nr8gwO42SqGpje7iLf-QIwp_eS", output=classifier_path, quiet=False)
+        gdown.download(id="1rO3Cxf4sJppGtda6wr82cAG1B5BnimtD", output=classifier_path, quiet=False)
         gdown.download(id="1gU2kBEb-XgX2o_F5hRX-fUSCnKELkKCD", output=localizer_path, quiet=False)
-        gdown.download(id="1rO3Cxf4sJppGtda6wr82cAG1B5BnimtD", output=unet_path, quiet=False)
+        gdown.download(id="1lN2CT1Nr8gwO42SqGpje7iLf-QIwp_eS", output=unet_path, quiet=False)
         super().__init__()
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        # ------------------------------------------------------------------
+        # ------------------------https://drive.google.com/file/d/1gU2kBEb-XgX2o_F5hRX-fUSCnKELkKCD/view?usp=sharing-----------------------https://drive.google.com/file/d//view?usp=sharing------------------- https://drive.google.com/file/d//view?usp=sharing
         # 1. Build full models (so we have the right architecture to load into)
         # ------------------------------------------------------------------
         clf_model  = VGG11Classifier(num_classes=num_breeds, in_channels=in_channels)
