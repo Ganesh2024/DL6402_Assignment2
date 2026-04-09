@@ -111,6 +111,27 @@ class OxfordIIITPetDataset(Dataset):
                 parts    = line.split()
                 stem     = parts[0]
                 class_id = int(parts[1]) - 1
+
+                # skip missing images
+                if not os.path.exists(
+                    os.path.join(self.img_dir, f"{stem}.jpg")
+                ):
+                    continue
+
+                # for localization task — skip samples with no bbox XML
+                if self.task == "localization":
+                    xml_path = os.path.join(self.xml_dir, f"{stem}.xml")
+                    if not os.path.exists(xml_path):
+                        continue
+                    # also skip zero-area boxes
+                    bbox = self._parse_xml_bbox(xml_path,
+                                                224, 224)
+                    if bbox is None:
+                        continue
+                    w, h = bbox[2], bbox[3]
+                    if w < 1.0 or h < 1.0:
+                        continue
+
                 self.samples.append((stem, class_id))
 
     @staticmethod

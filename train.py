@@ -74,14 +74,20 @@ def save_ckpt(model, epoch, metric, fpath):
 def collate_fn(batch):
     images    = torch.stack([b["image"]    for b in batch])
     class_ids = torch.stack([b["class_id"] for b in batch])
+
+    # Only stack bboxes for samples that have them
+    valid_bbox = [b for b in batch if b["bbox"] is not None]
     bboxes = (
-        torch.stack([b["bbox"] for b in batch])
-        if all(b["bbox"] is not None for b in batch) else None
+        torch.stack([b["bbox"] for b in valid_bbox])
+        if valid_bbox else None
     )
+
+    valid_mask = [b for b in batch if b["mask"] is not None]
     masks = (
-        torch.stack([b["mask"] for b in batch])
-        if all(b["mask"] is not None for b in batch) else None
+        torch.stack([b["mask"] for b in valid_mask])
+        if valid_mask else None
     )
+
     return {"image": images, "class_id": class_ids,
             "bbox": bboxes, "mask": masks}
 
