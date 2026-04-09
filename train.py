@@ -53,9 +53,7 @@ from losses.iou_loss import IoULoss
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-# ---------------------------------------------------------------------------
 # Shared utilities
-# ---------------------------------------------------------------------------
 
 def get_ckpt_dir(args) -> str:
     os.makedirs(args.ckpt_dir, exist_ok=True)
@@ -117,9 +115,7 @@ def make_loaders(args, task="all"):
     return train_loader, val_loader
 
 
-# ---------------------------------------------------------------------------
 # MixUp augmentation
-# ---------------------------------------------------------------------------
 
 def mixup_batch(imgs, labels, num_classes, alpha=0.4):
     """
@@ -149,9 +145,6 @@ def mixup_loss(logits, soft_labels):
     return -(soft_labels * log_probs).sum(dim=1).mean()
 
 
-# ---------------------------------------------------------------------------
-# LR warmup helper
-# ---------------------------------------------------------------------------
 
 def warmup_lr(optimiser, epoch, warmup_epochs, base_lr):
     """Linearly ramp LR from base_lr/10 to base_lr over warmup_epochs."""
@@ -161,9 +154,6 @@ def warmup_lr(optimiser, epoch, warmup_epochs, base_lr):
             pg["lr"] = base_lr * scale
 
 
-# ---------------------------------------------------------------------------
-# Dice loss for segmentation
-# ---------------------------------------------------------------------------
 
 class DiceLoss(nn.Module):
     def __init__(self, num_classes=3, smooth=1.0):
@@ -183,9 +173,6 @@ class DiceLoss(nn.Module):
         return total / self.num_classes
 
 
-# ---------------------------------------------------------------------------
-# Classifier validation helper
-# ---------------------------------------------------------------------------
 
 def evaluate_classifier(model, val_loader, criterion):
     model.eval()
@@ -207,9 +194,6 @@ def evaluate_classifier(model, val_loader, criterion):
     return val_loss, val_acc, val_f1
 
 
-# ---------------------------------------------------------------------------
-# Task 1 — Classification
-# ---------------------------------------------------------------------------
 
 def train_classifier(args):
     print("=" * 55)
@@ -249,7 +233,6 @@ def train_classifier(args):
         if epoch <= warmup_epochs:
             warmup_lr(optimiser, epoch, warmup_epochs, args.lr)
 
-        # ── train ──────────────────────────────────────────────────
         model.train()
         run_loss, correct, total = 0.0, 0, 0
 
@@ -281,7 +264,6 @@ def train_classifier(args):
         tr_loss = run_loss / total
         tr_acc  = correct  / total
 
-        # ── validate ────────────────────────────────────────────────
         vl, va, vf = evaluate_classifier(model, val_loader, criterion)
 
         # Step scheduler based on val F1
@@ -313,9 +295,6 @@ def train_classifier(args):
     print(f"\nBest val F1: {best_f1:.4f}")
 
 
-# ---------------------------------------------------------------------------
-# Task 2 — Localisation
-# ---------------------------------------------------------------------------
 
 def train_localizer(args):
     print("=" * 55)
@@ -413,9 +392,6 @@ def train_localizer(args):
     print(f"\nBest val IoU: {best_iou:.4f}")
 
 
-# ---------------------------------------------------------------------------
-# Task 3 — Segmentation
-# ---------------------------------------------------------------------------
 
 def train_segmentation(args):
     mode = args.unet_mode
@@ -536,9 +512,7 @@ def train_segmentation(args):
     print(f"\nBest Dice [{mode}]: {best_dice:.4f}")
 
 
-# ---------------------------------------------------------------------------
 # CLI
-# ---------------------------------------------------------------------------
 
 def parse_args():
     p = argparse.ArgumentParser()

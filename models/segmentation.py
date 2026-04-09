@@ -36,10 +36,6 @@ from .vgg11 import VGG11Encoder
 from .layers import CustomDropout
 
 
-# ---------------------------------------------------------------------------
-# Decoder building blocks
-# ---------------------------------------------------------------------------
-
 def _up_block(in_ch: int, out_ch: int) -> nn.ConvTranspose2d:
     """Transposed conv that doubles spatial dimensions."""
     return nn.ConvTranspose2d(in_ch, out_ch, kernel_size=2, stride=2)
@@ -57,7 +53,6 @@ def _double_conv(in_ch: int, out_ch: int) -> nn.Sequential:
     )
 
 
-# ---------------------------------------------------------------------------
 
 class VGG11UNet(nn.Module):
     """
@@ -88,23 +83,16 @@ class VGG11UNet(nn.Module):
         super().__init__()
         self.encoder = VGG11Encoder(in_channels=in_channels)
 
-        # ----- Decoder upsampling layers (transposed convs) -----
-        self.up5 = _up_block(512, 512)    # 7  → 14
-        self.up4 = _up_block(512, 256)    # 14 → 28
-        self.up3 = _up_block(256, 128)    # 28 → 56
-        self.up2 = _up_block(128, 64)     # 56 → 112
-        self.up1 = _up_block(64,  32)     # 112 → 224
+        self.up5 = _up_block(512, 512)
+        self.up4 = _up_block(512, 256)
+        self.up3 = _up_block(256, 128)
+        self.up2 = _up_block(128, 64)
+        self.up1 = _up_block(64,  32)
 
-        # ----- Post-concat conv blocks -----
-        # After up5: 512 (up) + 512 (s4 skip) = 1024 in
         self.dec5 = _double_conv(1024, 512)
-        # After up4: 256 (up) + 256 (s3 skip) = 512 in
         self.dec4 = _double_conv(512,  256)
-        # After up3: 128 (up) + 128 (s2 skip) = 256 in
         self.dec3 = _double_conv(256,  128)
-        # After up2:  64 (up) +  64 (s1 skip) = 128 in
         self.dec2 = _double_conv(128,  64)
-        # up1 has no skip connection (we've exhausted encoder stages)
         self.dec1 = _double_conv(32,   32)
 
         self.drop = CustomDropout(p=dropout_p)
@@ -114,7 +102,6 @@ class VGG11UNet(nn.Module):
 
         self._init_decoder_weights()
 
-    # ------------------------------------------------------------------
     def _init_decoder_weights(self):
         for m in self.modules():
             if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d)):
@@ -125,7 +112,6 @@ class VGG11UNet(nn.Module):
                 nn.init.ones_(m.weight)
                 nn.init.zeros_(m.bias)
 
-    # ------------------------------------------------------------------
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Args:
@@ -139,28 +125,28 @@ class VGG11UNet(nn.Module):
         #             's4' (512@14), 's5' (512@7)
 
         # Decoder stage 5: upsample bottleneck, fuse with s4
-        d5 = self.up5(bottleneck)                           # [B, 512, 14, 14]
-        d5 = torch.cat([d5, skips["s4"]], dim=1)            # [B,1024, 14, 14]
-        d5 = self.drop(self.dec5(d5))                       # [B, 512, 14, 14]
+        d5 = self.up5(bottleneck)                           
+        d5 = torch.cat([d5, skips["s4"]], dim=1)            
+        d5 = self.drop(self.dec5(d5))                       
 
         # Decoder stage 4: upsample, fuse with s3
-        d4 = self.up4(d5)                                   # [B, 256, 28, 28]
-        d4 = torch.cat([d4, skips["s3"]], dim=1)            # [B, 512, 28, 28]
-        d4 = self.drop(self.dec4(d4))                       # [B, 256, 28, 28]
+        d4 = self.up4(d5)                                   
+        d4 = torch.cat([d4, skips["s3"]], dim=1)            
+        d4 = self.drop(self.dec4(d4))                       
 
         # Decoder stage 3: upsample, fuse with s2
-        d3 = self.up3(d4)                                   # [B, 128, 56, 56]
-        d3 = torch.cat([d3, skips["s2"]], dim=1)            # [B, 256, 56, 56]
-        d3 = self.drop(self.dec3(d3))                       # [B, 128, 56, 56]
+        d3 = self.up3(d4)                                   
+        d3 = torch.cat([d3, skips["s2"]], dim=1)            
+        d3 = self.drop(self.dec3(d3))                       
 
         # Decoder stage 2: upsample, fuse with s1
-        d2 = self.up2(d3)                                   # [B,  64,112,112]
-        d2 = torch.cat([d2, skips["s1"]], dim=1)            # [B, 128,112,112]
-        d2 = self.drop(self.dec2(d2))                       # [B,  64,112,112]
+        d2 = self.up2(d3)                                   
+        d2 = torch.cat([d2, skips["s1"]], dim=1)            
+        d2 = self.drop(self.dec2(d2))                       
 
         # Decoder stage 1: upsample to full resolution, no skip available
-        d1 = self.up1(d2)                                   # [B,  32,224,224]
-        d1 = self.dec1(d1)                                  # [B,  32,224,224]
+        d1 = self.up1(d2)                                   
+        d1 = self.dec1(d1)                                  
 
-        out = self.output_conv(d1)                          # [B,   3,224,224]
+        out = self.output_conv(d1)                          
         return out

@@ -26,7 +26,6 @@ from models.localization import VGG11Localizer
 from models.segmentation import VGG11UNet
 
 
-# ---------------------------------------------------------------------------
 def _load_state(path: str, device: torch.device) -> dict:
     """Load a .pth file and return the raw state_dict regardless of format."""
     payload = torch.load(path, map_location=device)
@@ -35,7 +34,6 @@ def _load_state(path: str, device: torch.device) -> dict:
     return payload
 
 
-# ---------------------------------------------------------------------------
 class MultiTaskPerceptionModel(nn.Module):
     """
     Shared-backbone multi-task model.
@@ -60,32 +58,28 @@ class MultiTaskPerceptionModel(nn.Module):
         import gdown
         gdown.download(id="1rO3Cxf4sJppGtda6wr82cAG1B5BnimtD", output=classifier_path, quiet=False)
         gdown.download(id="1gU2kBEb-XgX2o_F5hRX-fUSCnKELkKCD", output=localizer_path, quiet=False)
-        gdown.download(id="1lN2CT1Nr8gwO42SqGpje7iLf-QIwp_eS", output=unet_path, quiet=False)
+        gdown.download(id="1Hbf0Pm-cuRGc1F776PcKocM-LZNLHLH_", output=unet_path, quiet=False)
         super().__init__()
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        # ------------------------https://drive.google.com/file/d/1gU2kBEb-XgX2o_F5hRX-fUSCnKELkKCD/view?usp=sharing-----------------------https://drive.google.com/file/d//view?usp=sharing------------------- https://drive.google.com/file/d//view?usp=sharing
         # 1. Build full models (so we have the right architecture to load into)
-        # ------------------------------------------------------------------
         clf_model  = VGG11Classifier(num_classes=num_breeds, in_channels=in_channels)
         loc_model  = VGG11Localizer(in_channels=in_channels)
         seg_model  = VGG11UNet(num_classes=seg_classes, in_channels=in_channels)
 
-        # ------------------------------------------------------------------
+
         # 2. Load saved weights
-        # ------------------------------------------------------------------
+
         clf_model.load_state_dict(_load_state(classifier_path, device))
         loc_model.load_state_dict(_load_state(localizer_path,  device))
         seg_model.load_state_dict(_load_state(unet_path,       device))
 
-        # ------------------------------------------------------------------
+
         # 3. Shared backbone — taken from the classifier (richest features)
-        # ------------------------------------------------------------------
+  
         self.backbone = clf_model.backbone
 
-        # ------------------------------------------------------------------
         # 4. Task heads (everything except the backbone)
-        # ------------------------------------------------------------------
         self.clf_head = clf_model.fc_head
 
         # Localiser head = reg_head only (backbone already shared above)
@@ -110,7 +104,6 @@ class MultiTaskPerceptionModel(nn.Module):
 
         self.to(device)
 
-    # ------------------------------------------------------------------
     def _decode_segmentation(self, bottleneck, skips):
         """Run the segmentation decoder path given encoder outputs."""
         sd = self.seg_decoder
@@ -137,7 +130,6 @@ class MultiTaskPerceptionModel(nn.Module):
 
         return sd["output_conv"](d1)
 
-    # ------------------------------------------------------------------
     def forward(self, x: torch.Tensor) -> dict:
         """
         Single forward pass through the shared backbone.
@@ -154,15 +146,15 @@ class MultiTaskPerceptionModel(nn.Module):
         # One backbone call produces both the bottleneck and skip maps
         bottleneck, skips = self.backbone(x, return_features=True)
 
-        # --- Classification head ---
+        # Classification head 
         flat   = bottleneck.view(bottleneck.size(0), -1)
         cls_out = self.clf_head(flat)
 
-        # --- Localisation head ---
+        # Localisation head
         raw_bbox = self.loc_head(flat)
         loc_out  = torch.sigmoid(raw_bbox) * self.img_size
 
-        # --- Segmentation head ---
+        # Segmentation head 
         seg_out = self._decode_segmentation(bottleneck, skips)
 
         return {

@@ -28,7 +28,6 @@ class CustomDropout(nn.Module):
             raise ValueError(f"Dropout probability must be in [0, 1), received {p}")
         self.p = p
 
-    # ------------------------------------------------------------------
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # No-op during evaluation — standard behaviour
         if not self.training:
@@ -47,6 +46,5 @@ class CustomDropout(nn.Module):
         # Inverted scaling: divide by keep probability so test-time is a no-op
         return x * mask / keep_prob
 
-    # ------------------------------------------------------------------
     def extra_repr(self) -> str:
         return f"p={self.p}"

@@ -58,33 +58,28 @@ class VGG11Encoder(nn.Module):
     def __init__(self, in_channels: int = 3):
         super().__init__()
 
-        # ── Stage 1 ───────────────────────────────────────────────
         self.stage1 = nn.Sequential(
             _conv_bn_relu(in_channels, 64),
-            nn.MaxPool2d(kernel_size=2, stride=2),      # 224 → 112
+            nn.MaxPool2d(kernel_size=2, stride=2),      
         )
 
-        # ── Stage 2 ───────────────────────────────────────────────
         self.stage2 = nn.Sequential(
             _conv_bn_relu(64, 128),
-            nn.MaxPool2d(kernel_size=2, stride=2),      # 112 → 56
+            nn.MaxPool2d(kernel_size=2, stride=2),      
         )
 
-        # ── Stage 3 ───────────────────────────────────────────────
         self.stage3 = nn.Sequential(
             _conv_bn_relu(128, 256),
             _conv_bn_relu(256, 256),
-            nn.MaxPool2d(kernel_size=2, stride=2),      # 56 → 28
+            nn.MaxPool2d(kernel_size=2, stride=2),      
         )
 
-        # ── Stage 4 ───────────────────────────────────────────────
         self.stage4 = nn.Sequential(
             _conv_bn_relu(256, 512),
             _conv_bn_relu(512, 512),
-            nn.MaxPool2d(kernel_size=2, stride=2),      # 28 → 14
+            nn.MaxPool2d(kernel_size=2, stride=2),      
         )
 
-        # ── Stage 5 ───────────────────────────────────────────────
         self.stage5 = nn.Sequential(
             _conv_bn_relu(512, 512),
             _conv_bn_relu(512, 512),
@@ -95,7 +90,6 @@ class VGG11Encoder(nn.Module):
 
         self._init_weights()
 
-    # ------------------------------------------------------------------
     def _init_weights(self):
         """
         Kaiming-He normal init for conv layers (fan_out, ReLU nonlinearity).
@@ -112,7 +106,6 @@ class VGG11Encoder(nn.Module):
                 nn.init.ones_(m.weight)
                 nn.init.zeros_(m.bias)
 
-    # ------------------------------------------------------------------
     def forward(
         self,
         x: torch.Tensor,
@@ -127,11 +120,11 @@ class VGG11Encoder(nn.Module):
             bottleneck [B, 512, 7, 7]
             (optionally) dict of per-stage feature maps for U-Net decoder
         """
-        s1 = self.stage1(x)        # [B,  64, 112, 112]
-        s2 = self.stage2(s1)       # [B, 128,  56,  56]
-        s3 = self.stage3(s2)       # [B, 256,  28,  28]
-        s4 = self.stage4(s3)       # [B, 512,  14,  14]
-        s5 = self.stage5(s4)       # [B, 512,   7,   7]
+        s1 = self.stage1(x)        
+        s2 = self.stage2(s1)       
+        s3 = self.stage3(s2)       
+        s4 = self.stage4(s3)       
+        s5 = self.stage5(s4)       
 
         bottleneck = self.adaptive_pool(s5)
 
@@ -143,7 +136,5 @@ class VGG11Encoder(nn.Module):
         return bottleneck
 
 
-# ---------------------------------------------------------------------------
 # Alias so autograder can import either name
-# ---------------------------------------------------------------------------
 VGG11 = VGG11Encoder

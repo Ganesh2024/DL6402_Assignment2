@@ -65,7 +65,6 @@ class VGG11Localizer(nn.Module):
 
         self._init_head()
 
-    # ------------------------------------------------------------------
     def _init_head(self):
         for m in self.reg_head.modules():
             if isinstance(m, nn.Linear):
@@ -75,7 +74,6 @@ class VGG11Localizer(nn.Module):
                 nn.init.ones_(m.weight)
                 nn.init.zeros_(m.bias)
 
-    # ------------------------------------------------------------------
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Args:
@@ -84,10 +82,10 @@ class VGG11Localizer(nn.Module):
         Returns:
             bbox [B, 4]  (x_center, y_center, width, height) in pixels
         """
-        feat  = self.backbone(x)                        # [B, 512, 7, 7]
-        flat  = feat.view(feat.size(0), -1)             # [B, 25088]
-        raw   = self.reg_head(flat)                     # [B, 4]
+        feat  = self.backbone(x)                        
+        flat  = feat.view(feat.size(0), -1)             
+        raw   = self.reg_head(flat)                     
 
         # Map to pixel space [0, img_size] via sigmoid scaling
-        bbox  = torch.sigmoid(raw) * self.img_size      # [B, 4]
+        bbox  = torch.sigmoid(raw) * self.img_size      
         return bbox
