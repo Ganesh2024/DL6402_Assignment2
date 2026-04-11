@@ -32,13 +32,17 @@ RUN_INET         = "internet-images"
 def make_runset(run_names):
     """
     Create a runset filtered by run display names.
-    Uses wr.Filter for correct expression building.
+    Uses a Python-like string expression for filters.
     """
     if isinstance(run_names, str):
         run_names = [run_names]
     
-    # Use the Filter builder - this ensures correct syntax
-    filter_expr = wr.Filter.display_name.in_(run_names)
+    # Format the list of run names as a string representation of a Python list
+    # This ensures the format is exactly like: ['name1', 'name2']
+    list_string = str([str(name) for name in run_names])
+    
+    # Construct the filter expression
+    filter_expr = f"Metric('displayName') in {list_string}"
     
     return wr.Runset(
         entity=ENTITY,
