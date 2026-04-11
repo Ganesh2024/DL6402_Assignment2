@@ -33,7 +33,7 @@ from models.vgg11 import VGG11Encoder
 from models.classification import VGG11Classifier
 from models.localization import VGG11Localizer
 from models.segmentation import VGG11UNet
-from multitask import MultiTaskPerceptionModel
+from models.multitask import MultiTaskPerceptionModel
 from data.pets_dataset import OxfordIIITPetDataset, build_transforms
 from losses.iou_loss import IoULoss
 from torch.utils.data import DataLoader
