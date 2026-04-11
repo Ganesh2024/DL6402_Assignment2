@@ -30,13 +30,22 @@ RUN_INET         = "internet-images"
 
 
 def make_runset(run_names):
-    """Create a runset filtered by run display names."""
+    """
+    Create a runset filtered by run display names.
+    For wandb >= 0.15, filters must be a string query or FilterExpr list.
+    """
     if isinstance(run_names, str):
         run_names = [run_names]
+    
+    # Build a string filter for the display_name field
+    # Format: 'display_name IN ("name1", "name2", ...)'
+    quoted_names = ', '.join(f'"{name}"' for name in run_names)
+    filter_expr = f'display_name IN ({quoted_names})'
+    
     return wr.Runset(
         entity=ENTITY,
         project=PROJECT,
-        filters={"display_name": {"$in": run_names}},
+        filters=filter_expr,  # Now a string, not a dict
     )
 
 
